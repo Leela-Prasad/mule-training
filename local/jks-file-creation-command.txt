@@ -1,0 +1,1 @@
+keytool -genkeypair -keystore keystore.jks -dname "CN=Amazon, OU=CheckoutAZ, O=Amazon, L=NYC, ST=NY, C=US" -keypass password -storepass password -keyalg RSA -sigalg SHA1withRSA -keysize 2048 -alias mule -validity 9999

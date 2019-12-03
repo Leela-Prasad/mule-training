@@ -1,0 +1,91 @@
+#%RAML 1.0
+version: v1
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/3d35311c-0cc3-4496-84d3-c653362217ee/ # 
+title: American Flights API
+
+
+types:
+  AmericanFlight: !include exchange_modules/68ef9520-24e9-4cf2-b2f5-620025690913/training-american-flight-data-type/1.0.1/AmericanFlightDataType.raml
+
+/flights:
+  get:
+    displayName: Get Flights By Destination 
+    headers:
+      Accept:
+        required: false
+        default: application/json
+        example: application/xml
+    queryParameters:
+      destination:
+        type: string
+        required: true
+        enum:
+          - SFO
+          - LAX
+          - CLE
+      dateOfTravel:
+        required: false
+        type: date-only
+        example: 2019-11-25
+    
+    responses:
+      200:
+        body:
+          application/xml:
+            example: !include exchange_modules/68ef9520-24e9-4cf2-b2f5-620025690913/training-american-flights-example/1.0.1/AmericanFlightsExample.raml
+            type: AmericanFlight[] 
+            #schema: !include folder/sample.xml
+              
+          application/json:
+            example: !include exchange_modules/68ef9520-24e9-4cf2-b2f5-620025690913/training-american-flights-example/1.0.1/AmericanFlightsExample.raml
+            type: AmericanFlight[]
+              
+            
+    
+  post:
+    displayName: Add Flight
+    body:
+      application/json:
+        example: !include examples/AmericanFlightExample.raml
+        type: AmericanFlight
+
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              message: Flight has been inserted
+
+  /{ID}:
+    get:
+      displayName: Get Flight By Id
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/AmericanFlightExample.raml
+              type: AmericanFlight
+                
+    put:
+      displayName: Update Flight By Id
+      body:
+        application/json:
+          example: !include examples/AmericanFlightExample.raml
+          type: AmericanFlight
+
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                message: Flight has been updated  
+            
+    delete:
+      displayName: Delete Flight By Id
+      responses:
+        200:
+          body:
+            application/json:
+              example: 
+                message: Flight with ID 123 has been deleted
+    

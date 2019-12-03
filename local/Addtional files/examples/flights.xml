@@ -1,0 +1,46 @@
+<flights>
+  <flight>
+    <id>1</id>
+    <flightCode>ER38SD</flightCode>
+    <cost>400</cost>
+    <departureDate>20 Mar 2016</departureDate>
+    <fromAirport>MUA</fromAirport>
+    <toAirport>SFO</toAirport>
+    <availableSeats>0</availableSeats>
+    <planeType>Boeing 737</planeType>
+    <totalsSeats>150</totalsSeats>
+  </flight>
+  <flight>
+    <id>2</id>
+    <flightCode>ER45IF</flightCode>
+    <cost>345.99</cost>
+    <departureDate>11 Feb 2016</departureDate>
+    <fromAirport>MUA</fromAirport>
+    <toAirport>LAX</toAirport>
+    <availableSeats>52</availableSeats>
+    <planeType>Boeing 777</planeType>
+    <totalsSeats>300</totalsSeats>
+  </flight>
+  <flight>
+    <id>3</id>
+    <flightCode>ER38SD</flightCode>
+    <cost>250</cost>
+    <departureDate>20 Apr 2016</departureDate>
+    <fromAirport>MUA</fromAirport>
+    <toAirport>SFO</toAirport>
+    <availableSeats>15</availableSeats>
+    <planeType>Boeing 737</planeType>
+    <totalsSeats>150</totalsSeats>
+  </flight>
+  <flight>
+    <id>4</id>
+    <flightCode>ER45IF</flightCode>
+    <cost>635.99</cost>
+    <departureDate>25 Mar 2016</departureDate>
+    <fromAirport>MUA</fromAirport>
+    <toAirport>LAX</toAirport>
+    <availableSeats>20</availableSeats>
+    <planeType>Boeing 777</planeType>
+    <totalsSeats>300</totalsSeats>
+  </flight>
+</flights>

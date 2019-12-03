@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <db:mysql-config name="MySQL_Configuration" host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" doc:name="MySQL Configuration"/>
+    <jms:activemq-connector name="Active_MQ" brokerURL="tcp://localhost:61616" validateConnections="true" doc:name="Active MQ">
+        <reconnect count="100"/>
+    </jms:activemq-connector>
+    <flow name="db-poll-mqFlow" processingStrategy="synchronous">
+        <poll doc:name="Poller">
+            <fixed-frequency-scheduler frequency="5000"/>
+            <watermark variable="maxAccountId" default-expression="0" selector="MAX" selector-expression="#[payload.accountID]"/>
+            <db:select config-ref="MySQL_Configuration" doc:name="Database">
+                <db:parameterized-query><![CDATA[SELECT * FROM accounts WHERE accountID > #[flowVars.maxAccountId]]]></db:parameterized-query>
+            </db:select>
+        </poll>
+        <foreach doc:name="For Each">
+            <json:object-to-json-transformer mimeType="application/json" doc:name="Object to JSON"/>
+            <jms:outbound-endpoint queue="inputq" connector-ref="Active_MQ" doc:name="JMS Sender"/>
+            <logger message="Message Sent Payload is #[payload]" level="INFO" doc:name="Logger"/>
+        </foreach>
+        <logger message="All data from this polling is processed" level="INFO" doc:name="Logger"/>
+    </flow>
+    <flow name="jmsReceiver">
+        <jms:inbound-endpoint queue="inputq" connector-ref="Active_MQ" doc:name="JMS Listener"/>
+        <object-to-string-transformer mimeType="application/json" doc:name="Object to String"/>
+        <dw:transform-message doc:name="JSON To XML">
+            <dw:set-payload><![CDATA[%dw 1.0
+%input payload application/json
+%output application/xml
+---
+customerAccount: payload]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <flow name="dataweaveFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/dataweave1" allowedMethods="POST" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data\json_1.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	flightOperator: payload.airline,
+	toAirport: payload.destination,
+	fromAirport: "MUA",
+	dateOfTravel: now as :string {format: "dd/MM/YYYY HH:mm:SS"}
+} as :object {class: "java.util.HashMap"}]]></dw:set-payload>
+            <dw:set-variable variableName="xml"><![CDATA[%dw 1.0
+%output application/xml
+%namespace boa http://www.boa.com/mule3
+%type mydate = :string {format: "dd/MM/YYYY HH:mm:SS"}
+---
+boa#flightSearch @(priceUnder: 500, currency: "USD") : {
+	flightOperator: payload.airline,
+	toAirport: payload.destination,
+	fromAirport: "MUA",
+	dateOfTravel: now as :mydate
+}]]></dw:set-variable>     
+            <dw:set-variable resource="classpath:javaExpressions.dwl" variableName="java"/>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+    </flow>
+</mule>

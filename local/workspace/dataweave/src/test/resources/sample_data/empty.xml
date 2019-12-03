@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<flights size="3">
+  <flight number="1">
+    <flightOperator>UNITED</flightOperator>
+    <cost>954</cost>
+    <takeOffDate>12 Feb 2015</takeOffDate>
+    <type>Boeing 777</type>
+    <fromAirport>MUA</fromAirport>
+    <code>er39rj</code>
+    <emptySeats>23</emptySeats>
+    <toAirport>SFO</toAirport>
+    <status>Normal</status>
+  </flight>
+  <flight number="2">
+    <flightOperator>UNITED</flightOperator>
+    <cost>945</cost>
+    <takeOffDate>11 Sep 2015</takeOffDate>
+    <type>Boeing 757</type>
+    <fromAirport>MUA</fromAirport>
+    <code>er39rk</code>
+    <emptySeats>54</emptySeats>
+    <toAirport>SFO</toAirport>
+    <status>Normal</status>
+  </flight>
+  <flight number="3">
+    <flightOperator>UNITED</flightOperator>
+    <cost>400</cost>
+    <takeOffDate>20 Mar 2015</takeOffDate>
+    <type>Boeing 737</type>
+    <fromAirport>MUA</fromAirport>
+    <code>er38sd</code>
+    <emptySeats>10</emptySeats>
+    <toAirport>SFO</toAirport>
+    <status>Filling fast</status>
+  </flight>
+</flights>

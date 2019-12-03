@@ -1,0 +1,26 @@
+[
+  {
+    "street": "111 Boulevard Hausmann",
+    "city": "Paris",
+    "country": "France",
+    "state": "",
+    "customerName": "Dog Park Industries",
+    "pincode": 75008
+  },
+  {
+    "street": "400 South St",
+    "city": "San Francisco",
+    "country": "USA",
+    "state": "CA",
+    "customerName": "Iguana Park Industries",
+    "pincode": 91156
+  },
+  {
+    "street": "777 North St",
+    "city": "San Francisco",
+    "country": "USA",
+    "state": "CA",
+    "customerName": "Cat Park Industries",
+    "pincode": 91156
+  }
+]

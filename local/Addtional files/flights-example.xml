@@ -1,0 +1,35 @@
+<flights size="3">
+  <flight code="ER38sd">
+    <flightOperator>united</flightOperator>
+    <cost>400</cost>
+    <takeOffDate>20 Mar 2015</takeOffDate>
+    <planeType>Boeing 737</planeType>
+    <moreDetails>
+      <fromAirport>MUA</fromAirport>
+      <emptySeats>0</emptySeats>
+      <toAirport>SFO</toAirport>
+    </moreDetails>
+  </flight>
+  <flight code="ER39rk">
+    <flightOperator>united</flightOperator>
+    <cost>945</cost>
+    <takeOffDate>11 Sep 2015</takeOffDate>
+    <planeType>Boeing 757</planeType>
+    <moreDetails>
+      <fromAirport>MUA</fromAirport>
+      <emptySeats>54</emptySeats>
+      <toAirport>SFO</toAirport>
+    </moreDetails>
+  </flight>
+  <flight code="ER39rj">
+    <flightOperator>united</flightOperator>
+    <cost>954</cost>
+    <takeOffDate>12 Feb 2015</takeOffDate>
+    <planeType>Boeing 777</planeType>
+    <moreDetails>
+      <fromAirport>MUA</fromAirport>
+      <emptySeats>23</emptySeats>
+      <toAirport>SFO</toAirport>
+    </moreDetails>
+  </flight>
+</flights>

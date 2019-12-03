@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:cluster="http://www.mulesoft.org/schema/mule/ee/cluster" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:american-flights-api="http://www.mulesoft.org/schema/mule/american-flights-api" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/american-flights-api http://www.mulesoft.org/schema/mule/american-flights-api/current/mule-american-flights-api.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd">
+    <american-flights-api:Configuration name="American_Flights_API__Configuration" doc:name="American Flights API: Configuration"/>
+    <ws:consumer-config name="Web_Service_Consumer" wsdlLocation="http://ilt.mulesoft-training.com/essentials/delta?wsdl" service="TicketServiceService" port="TicketServicePort" serviceAddress="http://ilt.mulesoft-training.com/essentials/delta" doc:name="Web Service Consumer"/>
+    <http:request-config name="HTTP_Request_Configuration" host="ilt.mulesoft-training.com" port="80" basePath="/essentials/united" doc:name="HTTP Request Configuration"/>
+    <configuration defaultExceptionStrategy-ref="ChoiceExceptionStrategy" doc:name="Configuration">
+        <http:config useTransportForUris="false"/>
+    </configuration>
+    
+    <configuration doc:name="Configuration">
+    	<expression-language>
+    		<global-functions>
+    			def getTotalSeats(planeType) {
+    				if(planeType.contains("737")) {
+    					return 180;
+    				}else if(planeType.contains("757")) {
+    					return 430;
+    				}else if(planeType.contains("777")) {
+    					return 680;
+    				}else {
+    					return 800;
+    				}
+    			}
+    		</global-functions>
+    	</expression-language>
+    </configuration>
+    
+    <flow name="getFlightsFlow">
+        <set-session-variable variableName="airline" value="#[(message.inboundProperties.'http.query.params'.airline != empty) ? message.inboundProperties.'http.query.params'.airline : &quot;all&quot;]" doc:name="Session Variable"/>
+        <choice doc:name="Choice">
+            <when expression="#[sessionVars.airline == &quot;all&quot;]">
+                <flow-ref name="getAllFlightsFlow" doc:name="FR getAllFlightsFlow"/>
+            </when>
+            <when expression="#[sessionVars.airline == &quot;american&quot;]">
+                <flow-ref name="getAmericanFlightsFlow" doc:name="FR getAmericanFlightsFlow"/>
+            </when>
+            <when expression="#[sessionVars.airline == &quot;delta&quot;]">
+                <flow-ref name="getDeltaFlightsFlow" doc:name="FR getDeltaFlightsFlow"/>
+            </when>
+            <when expression="#[sessionVars.airline == &quot;united&quot;]">
+                <flow-ref name="getUnitedFlightsFlow" doc:name="FR getUnitedFlightsFlow"/>
+            </when>
+            <otherwise>
+                <set-payload value="The Selected Airline is NOT Supported Yet." doc:name="Set Payload"/>
+            </otherwise>
+        </choice>
+    </flow>
+    <flow name="getAllFlightsFlow">
+        <scatter-gather doc:name="Scatter-Gather">
+            <processor-chain>
+                <flow-ref name="getAmericanFlightsFlow" doc:name="FR getAmericanFlightsFlow"/>
+                <set-variable variableName="a" value="#[10]" doc:name="Variable"/>
+            </processor-chain>
+            <processor-chain>
+                <flow-ref name="getDeltaFlightsFlow" doc:name="FR getDeltaFlightsFlow"/>
+                <set-variable variableName="a" value="#[20]" doc:name="Variable"/>
+            </processor-chain>
+            <processor-chain>
+                <flow-ref name="getUnitedFlightsFlow" doc:name="FR getUnitedFlightsFlow"/>
+                <set-variable variableName="a" value="#[30]" doc:name="Variable"/>
+            </processor-chain>
+        </scatter-gather>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+flatten payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="getAmericanFlightsFlow">
+        <set-variable variableName="destination" value="#[(message.inboundProperties.'http.query.params'.destination != empty)?message.inboundProperties.'http.query.params'.destination : &quot;SFO&quot;]" doc:name="FV destination"/>
+        <american-flights-api:get-flights-by-destination config-ref="American_Flights_API__Configuration" client_id="7f7c5d17f5074fd395ee6c5536055b19" client_secret="951d11bA450747E098099ff4886Ed740" destination="#[flowVars.destination]" doc:name="American Flights API"/>
+        <dw:transform-message doc:name="TM JSON To Common JSON" metadata:id="8ac58c32-414c-4e53-8382-ffc592a76906">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	airline: "American",
+	flightCode: payload01.code,
+	fromAirportCode: payload01.origin,
+	toAirportCode: payload01.destination,
+	departureDate: payload01.departureDate,
+	emptySeats: payload01.emptySeats,
+	totalSeats: payload01.plane.totalSeats,
+	price: payload01.price,
+	planeType: payload01.plane.type
+})]]></dw:set-payload>
+        </dw:transform-message>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-property propertyName="http.status" value="400" doc:name="Property"/>
+            <set-payload value="Invalid Destination" doc:name="Set Payload"/>
+        </catch-exception-strategy>
+    </flow>
+    <flow name="getDeltaFlightsFlow">
+        <set-variable variableName="destination" value="#[(message.inboundProperties.'http.query.params'.destination != empty)?message.inboundProperties.'http.query.params'.destination : &quot;SFO&quot;]" doc:name="FV destination"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://soap.training.mulesoft.com/
+---
+{
+	ns0#findFlight: {
+		destination: flowVars.destination as :string
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <ws:consumer config-ref="Web_Service_Consumer" operation="findFlight" doc:name="Web Service Consumer"/>
+        <dw:transform-message doc:name="TM XML To Common Json" metadata:id="c8159fa3-cab8-4974-a6d9-276c203c7ef5">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 http://soap.training.mulesoft.com/
+---
+payload.ns0#findFlightResponse.*return map ((return , indexOfReturn) -> {
+	airline: return.airlineName,
+	flightCode: return.code,
+	fromAirportCode: return.origin,
+	toAirportCode: return.destination,
+	departureDate: return.departureDate,
+	emptySeats: return.emptySeats,
+	totalSeats: getTotalSeats(return.planeType),
+	price: return.price,
+	planeType: return.planeType
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="getUnitedFlightsFlow">
+        <set-variable variableName="destination" value="#[(message.inboundProperties.'http.query.params'.destination != empty)?message.inboundProperties.'http.query.params'.destination : &quot;SFO&quot;]" doc:name="FV destination"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="/flights/{DEST}" method="GET" doc:name="United Rest API">
+            <http:request-builder>
+                <http:uri-param paramName="DEST" value="#[flowVars.destination]"/>
+            </http:request-builder>
+        </http:request>
+        <dw:transform-message doc:name="TM XML To Common Json" metadata:id="922bbb08-4b3e-4a06-b2ce-f6a58a4ced09">
+            <dw:input-payload mimeType="application/json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload.flights map ((flight , indexOfFlight) -> {
+	airline: flight.airlineName,
+	flightCode: flight.code,
+	fromAirportCode: flight.origin,
+	toAirportCode: flight.destination,
+	departureDate: flight.departureDate,
+	emptySeats: flight.emptySeats,
+	//totalSeats: getTotalSeats(flight.planeType),
+	//String Object
+	//totalSeats: lookup("getTotalSeatsFlow", flight.planeType),
+	// Array object
+	//totalSeats: lookup("getTotalSeatsFlow", [flight.planeType, flight.price]),
+	//Map Object
+	totalSeats: lookup("getTotalSeatsFlow", {pt:flight.planeType, p:flight.price}),
+	price: flight.price,
+	planeType: flight.planeType
+})]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="getTotalSeatsFlow">
+        <expression-component doc:name="Expression"><![CDATA[if(payload.pt.contains("737")) {
+	payload= -180;
+}else if(payload.pt.contains("757")) {
+    	payload = -430;
+}else if(payload.pt.contains("777")) {
+    payload = -680;
+}else {
+    	payload = -800;
+}]]></expression-component>
+    </flow>
+    <choice-exception-strategy name="ChoiceExceptionStrategy">
+        <catch-exception-strategy when="#[exception is com.mulesoft.weave.mule.exception.WeaveExecutionException]" doc:name="Weave Exception Strategy">
+            <set-property propertyName="http.status" value="400" doc:name="Property"/>
+            <set-payload value="Invalid Destination" doc:name="Set Payload"/>
+        </catch-exception-strategy>
+        <catch-exception-strategy doc:name="Catch Exception Strategy">
+            <set-property propertyName="http.status" value="500" doc:name="Property"/>
+            <set-payload value="Something went wrong, Try later." doc:name="Set Payload"/>
+        </catch-exception-strategy>
+    </choice-exception-strategy>
+</mule>

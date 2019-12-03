@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd">
+    <flow name="file-data-processingFlow">
+        <file:inbound-endpoint path="C:\Users\RPS\Desktop\Mule 3\files\input" moveToPattern="#[server.nanoTime() + &quot;_&quot; + message.inboundProperties.originalFilename]" moveToDirectory="C:\Users\RPS\Desktop\Mule 3\files\backup" pollingFrequency="5000" fileAge="2000" responseTimeout="10000" doc:name="File Listener">
+            <file:filename-regex-filter pattern=".*csv" caseSensitive="true"/>
+        </file:inbound-endpoint>
+        <dw:transform-message doc:name="CSV To JSON" metadata:id="e5fa59cf-8dec-4ad7-899d-5423d6076228">
+            <dw:input-payload mimeType="application/csv"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload map ((payload01 , indexOfPayload01) -> {
+	street: payload01."Billing Street",
+	city: payload01."Billing City",
+	country: payload01."Billing Country",
+	state: payload01."Billing State",
+	customerName: payload01.Name,
+	pincode: payload01.BillingPostalCode as :number
+})]]></dw:set-payload>
+        </dw:transform-message>
+        <file:outbound-endpoint responseTimeout="10000" doc:name="File Writer" outputPattern="#[message.inboundProperties.originalFilename + &quot;.json&quot;]" path="C:\Users\RPS\Desktop\Mule 3\files\json"/>
+    </flow>
+</mule>
